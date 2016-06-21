@@ -5,7 +5,7 @@
  *
  *    Description:  class for maintain clients 	 
  *
- *        Version:  1.0 
+ *        Version:  1.0
  *        Created:  06/12/2016 10:03:35 PM
  *       Revision:  none
  *       Compiler:  GCC
@@ -20,93 +20,96 @@
 User::User(int clientID) : clientID(clientID) 
 {
 	connected = true;
-  // Test account object.
-  account = new Account("user", "pass", "email");
 }
 
 void User::uListen() 
 {
-	char fromUser[120];
-	while (true)
+  char fromUser[120];
+	while (connected)
 	{
 		clearBuff(fromUser, 120);
+		std::cout << "woot" << std::endl;
 		//listen for intput from User
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
-    // Remove trailing whitespace from input
     std::string userInput = std::string(fromUser);
-    boost::trim(userInput);
-
+    boost::trim(userInput); 
+		std::cout << userInput << std::endl;
 		if (userInput == "GAMESTART") 
 		{
+			std::cout << "ran" << std::endl;
 		       	startGame(); 
 		}
 		else if (userInput == "EXIT")
 		{
+			connected = false;	
+      // Close the user's socket.
+      close(clientID);
 			std::cout << "User logged off!!! ClientID: " << clientID << std::endl;
-			break;
 		}
 		else if (strcmp(fromUser, "") == 0)
-		{	
+		{
+			connected = false;
 			std::cout << "Server lost connection with User!!! ClientID: " << clientID << std::endl;
-			break;
 		}
 	}	
 }
 
-// start python game script and handle communication with UDS / IPC
+//start python game script and handle communication with UDS / IPC
 void User::startGame()
 {
-	// socket domain ".sock + clientID"
+  std::cout << "Game started for user!" << std::endl;
+	//socket domain ".sock + clientID"
+  Account* account = new Account;
 	char socketP[50];
 	char cClientID[10];
 	sprintf(cClientID, "%d", clientID);
-	clearBuff(socketP, 50);
 	strcat(socketP, "gameScripts/.sock");
 	strcat(socketP, cClientID);
 	strcat(socketP, "\0");
-	// UD socket creation
+	//UD socket creation
 	int sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	struct sockaddr_un addr;
 	addr.sun_family = AF_UNIX;
-	std::cout << socketP << std::endl;
 	strncpy(addr.sun_path, socketP, strlen(socketP));
 	unlink(socketP);
-	// bind socket to domain
+	//bind socket to domain
 	if (bind(sock, (struct sockaddr*) &addr, sizeof(addr)) < 0)
-	{
 		std::cout << "failed to bind game server to ./sock" << clientID << std::endl;
+		cout << "failed to bind game server to ./sock" << clientID << endl;
 	} 
-	// listen for incoming connections from newly spawned game script
+	//listen for incoming connections from newly spawned game script
 	listen(sock, 1);
-	// start game script
-	char* sGCMD = new char[100];
+	//start game script
+  std::cout << sGCMD << std::endl;
+  cout << sGCMD << endl;
 	strcpy(sGCMD, "python gameScripts/test.py ");
-	strcat(sGCMD, cClientID);
+	std::cout << sGCMD << std::endl;
+	cout << sGCMD << endl;
 	ProcSpawn pSpawn(sGCMD);
-	// accept connection
+	//accept connection
 	int gameInst = accept(sock, NULL, NULL);
 	int rChunkS = 1000;
 	char recv[rChunkS];
 	while (true)
 	{
 		clearBuff(recv, rChunkS);
-		// read data from game script 
+		//read data from game script 
 		read(gameInst, recv, rChunkS);
 		if (strcmp(recv, "<EXIT>") != 0)
 		{	
-			// send the output from the game script to the user
 			std::cout << "from gameScript: " << recv << std::endl;
+			cout << "from gameScript: " << recv << endl;
 			write(clientID, recv, strlen(recv));
-			// wait for response from user
+			//wait for response from user
 			clearBuff(recv, rChunkS);
-			read(clientID, recv, rChunkS);
 			std::cout << "from user: " << recv << std::endl;
-			// send users response to gamescript
+			cout << "from user: " << recv << endl;
+			//send users response to gamescript
 			write(gameInst, recv, strlen(recv));
 		} 
 		else 
-		{
 			std::cout << "User " << clientID << "'s game script exiting" << std::endl;
+			cout << "User " << clientID << "'s game script exiting" << endl;
 			break;
 		}
 	}
@@ -126,20 +129,7 @@ void User::service()
 
 void* User::threadEntry(void* p)
 {
-	// cast void pointer to pointer of type User
-	User* parent;
-	/*
-	 * note this keyword returns pointer to instance of object so *(&p) <- '*' is dereferencing 
-	 * this before casting to pointer of type User
-	 */
-	parent = ((User*) *(&p));
-	// start listening loop on this glorious new thread
-	parent->uListen();
-	/*
-	 * when uListen() returns client must have exited or lost connection
-	 * so set connection to false so server can know to delete this object <- so sad :( 
-	 */
-	parent->connected = false;
+	((User*) p)->uListen();
 	return NULL;
 }
 

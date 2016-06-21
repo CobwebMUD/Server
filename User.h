@@ -17,20 +17,24 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <pthread.h>
 #include <iostream>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <string>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
+#include <regex>
 #include "ProcSpawn.h"
+#include "Account.h"
 
 class User {
 	public:
 		User(int clientID);
 		void service();
 		bool getState();
+    Account* account;
 	private:
 		void uListen();
 		void startGame();
