@@ -10,7 +10,7 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  Alyssa Alvarez 
+ *         Author: 
  *   Organization:  CobwebMUD 
  *
  * =====================================================================================
