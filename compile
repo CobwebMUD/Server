@@ -1,0 +1,3 @@
+#!/bin/sh
+g++ Main.cpp User.cpp ProcSpawn.cpp Account.cpp -o cobweb -lpthread -lsqlite3
+echo "Done!"
