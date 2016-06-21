@@ -1,3 +1,0 @@
-#lil bash script for compiling cobweb mud server 
-g++ Main.cpp User.cpp ProcSpawn.cpp Account.cpp -lpthread -lsqlite3 -o cobweb
-echo "Done!"
