@@ -34,7 +34,7 @@ class User {
 		User(int clientID);
 		void service();
 		bool getState();
-    Account* account;
+    Account* testAccount;
 	private:
 		void uListen();
 		void startGame();

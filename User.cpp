@@ -20,8 +20,7 @@
 User::User(int clientID) : clientID(clientID) 
 {
 	connected = true;
-  // Test account object.
-  account = new Account("user", "pass", "email");
+  testAccount = new Account("user", "pass", "email");
 }
 
 void User::uListen() 
