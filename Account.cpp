@@ -94,10 +94,8 @@ int Account::storeAccount() {
     if (rc != SQLITE_DONE) {
       std::cout << "ERROR executing statement: " << sqlite3_errmsg(db) << std::endl;
     }
-  } else {
-    return true;
   }
   sqlite3_finalize(stmt);
   sqlite3_close(db);
-  return false;
+  return (count > 0);
 };
