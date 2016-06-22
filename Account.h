@@ -24,13 +24,13 @@
 #include <ctime>
 
 class Account {
-  public:
-    Account(std::string userName, std::string pass, std::string email);
-    int storeAccount();  
-    bool exists;
-  private:
-    std::string accountName;
-    std::string accountPass;
-    std::string accountEmail;
-    std::string dateCreated;
+	public:
+		Account(std::string userName, std::string pass, std::string email);
+		int storeAccount();  
+		bool exists;
+	private:
+		std::string accountName;
+		std::string accountPass;
+		std::string accountEmail;
+		std::string dateCreated;
 };

@@ -20,7 +20,7 @@
 User::User(int clientID) : clientID(clientID) 
 {
 	connected = true;
-  testAccount = new Account("user", "pass", "email");
+	testAccount = new Account("user", "pass", "email");
 }
 
 void User::uListen() 
@@ -31,13 +31,13 @@ void User::uListen()
 		clearBuff(fromUser, 120);
 		//listen for intput from User
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
-    // Remove trailing whitespace from input
-    std::string userInput = std::string(fromUser);
-    boost::trim(userInput);
+		// Remove trailing whitespace from input
+		std::string userInput = std::string(fromUser);
+		boost::trim(userInput);
 
 		if (userInput == "GAMESTART") 
 		{
-		       	startGame(); 
+			startGame(); 
 		}
 		else if (userInput == "EXIT")
 		{

@@ -43,7 +43,7 @@ int main()
 	//bind server socket to port
 	if (bind(servSocket, (struct sockaddr*) &socketDef, sizeof(socketDef)) < 0) 
 	{
-    std::cout << "Error binding socket to port: " << port << std::endl;
+		std::cout << "Error binding socket to port: " << port << std::endl;
 		return -1;
 	}
 
@@ -56,12 +56,12 @@ int main()
 		socklen_t clientDefLn = sizeof(clientDef);
 		//block and wait to accept connection from clients
 		int clientID = accept(servSocket, (struct sockaddr*) &clientDef, &clientDefLn);
-    std::cout << "CLIENT CONNECTED!!! ID: " << clientID << std::endl;
+		std::cout << "CLIENT CONNECTED!!! ID: " << clientID << std::endl;
 		//create user object to maintain clients connection 
-	 	User* user = new User(clientID);
+		User* user = new User(clientID);
 		user->service();
 		users.push_back(*user);
-    std::cout << "Users online: " << users.size() << std::endl;
+		std::cout << "Users online: " << users.size() << std::endl;
 		//loop through and remove disconnected clients from users vector 
 		for (int i = 0; i < users.size(); i++)
 		{
