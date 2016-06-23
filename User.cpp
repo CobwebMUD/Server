@@ -32,9 +32,11 @@ User::~User()
 void User::uListen() 
 {
 	char fromUser[120];
+	
 	// if client is not yet logged on 
 	write(clientID, "LOGIN\n", 7); 
 	read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));	
+	
 	if (strcmp(fromUser, "NEWACC") == 0)
 	{
 		// create new account 
@@ -58,6 +60,31 @@ void User::uListen()
 	else if (strcmp(fromUser, "EXISTACC") == 0) 
 	{
 		// log into existing account 
+		// get username from user
+		char const* prompt;
+		prompt = "What is your username? ";
+		write(clientID, prompt, strlen(prompt));
+		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		std::string userName = std::string(fromUser);
+		// get password from user
+		prompt = "Password: ";
+		write(clientID, prompt, strlen(prompt));
+		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		std::string userPass = std::string(fromUser);
+		std::cout << userName << " " << userPass << std::endl;
+		
+		Account account(userName, userPass);
+		if (!account.userExists) {
+			std::cout << "User does not exist: " << !account.userExists << std::endl;
+			if (account.loggedIn) {
+				std::cout << "You have logged in! " << account.loggedIn << std::endl;
+				loggedIn = true;
+			} else {
+				std::cout << "Error logging in! Incorrect password: " << account.loggedIn << std::endl;
+			}
+		} else {
+			std::cout << "Woops! User exists: " << !account.userExists << std::endl;
+		}
 	}
 	if (loggedIn)
 	{
@@ -68,6 +95,7 @@ void User::uListen()
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 			// Remove trailing whitespace from input
 			std::string userInput = std::string(fromUser);
+			boost::algorithm::trim(userInput);
 			if (userInput == "GAMESTART") 
 			{
 				startGame(); 
@@ -185,3 +213,5 @@ bool User::getState()
 {
 	return connected;
 }
+
+

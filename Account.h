@@ -26,11 +26,22 @@
 class Account {
 	public:
 		Account(std::string userName, std::string pass, std::string email);
-		int storeAccount();  
-		bool exists;
+		Account(std::string userName, std::string pass);
+		bool userExists;
+		bool loggedIn;
+		struct accountDetails {
+			std::string name;
+			std::string pass;
+			std::string email;
+			std::string date;
+		} details;
 	private:
+		bool exists(sqlite3 *db);
+		char const* dbFile = "game.db";
 		std::string accountName;
 		std::string accountPass;
 		std::string accountEmail;
 		std::string dateCreated;
+		void storeAccount(sqlite3 *db);
+		void findDetailsByUsername(sqlite3 *db);
 };
