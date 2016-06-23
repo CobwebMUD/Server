@@ -25,7 +25,6 @@
 #include <string>
 #include <sstream>
 #include <regex>
-#include <boost/algorithm/string.hpp>
 #include "ProcSpawn.h"
 #include "Account.h"
 
