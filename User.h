@@ -24,7 +24,6 @@
 #include <sys/un.h>
 #include <string>
 #include <sstream>
-#include <boost/algorithm/string.hpp>
 #include <regex>
 #include "ProcSpawn.h"
 #include "Account.h"
@@ -32,14 +31,17 @@
 class User {
 	public:
 		User(int clientID);
+		~User();
 		void service();
 		bool getState();
-		Account* testAccount;
 	private:
 		void uListen();
 		void startGame();
 		void clearBuff(char* buff, int size);
+		void trimStr(std::string* str);
 		static void* threadEntry(void* p);	
+		Account* account;
+		bool loggedIn;
 		bool connected;
 		int clientID;
 };

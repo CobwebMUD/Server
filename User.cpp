@@ -20,34 +20,68 @@
 User::User(int clientID) : clientID(clientID) 
 {
 	connected = true;
-	testAccount = new Account("user", "pass", "email");
+	loggedIn = false;
+}
+
+User::~User()
+{
+	// on object deconstruction delete account object 
+	delete account;
 }
 
 void User::uListen() 
 {
 	char fromUser[120];
-	while (true)
+	// if client is not yet logged on 
+	write(clientID, "LOGIN\n", 7); 
+	read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));	
+	if (strcmp(fromUser, "NEWACC") == 0)
 	{
-		clearBuff(fromUser, 120);
-		//listen for intput from User
+		// create new account 
+		// get credentials form user
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
-		// Remove trailing whitespace from input
-		std::string userInput = std::string(fromUser);
-		boost::trim(userInput);
-
-		if (userInput == "GAMESTART") 
+		std::string accInfoBlk = std::string(fromUser);
+		// create array of user info -> contains username, pass, email 
+		std::string accInfo[3];
+		// get info out of accInfoBlk and store it in accInfo array
+		for (int i = 0; i < 3; i++)
 		{
-			startGame(); 
+			accInfoBlk = accInfoBlk.substr(accInfoBlk.find("/") + 1, accInfoBlk.size());	
+			accInfo[i] = accInfoBlk.substr(0, accInfoBlk.find("/"));
 		}
-		else if (userInput == "EXIT")
+		// create new account object with credentails
+		std::cout << accInfo[0] << " " << accInfo[1] << " " << accInfo[2] << std::endl;
+		// create new account 
+		account = new Account(accInfo[0], accInfo[1], accInfo[2]);
+		loggedIn = true;
+	}
+	else if (strcmp(fromUser, "EXISTACC") == 0) 
+	{
+		// log into existing account 
+	}
+	if (loggedIn)
+	{
+		while (true)
 		{
-			std::cout << "User logged off!!! ClientID: " << clientID << std::endl;
-			break;
-		}
-		else if (strcmp(fromUser, "") == 0)
-		{	
-			std::cout << "Server lost connection with User!!! ClientID: " << clientID << std::endl;
-			break;
+			clearBuff(fromUser, 120);
+			// listen for intput from User
+			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+			// Remove trailing whitespace from input
+			std::string userInput = std::string(fromUser);
+			if (userInput == "GAMESTART") 
+			{
+				startGame(); 
+			}
+			else if (userInput == "EXIT")
+			{
+				std::cout << "User logged off!!! ClientID: " << clientID << std::endl;
+				break;
+			}
+			else if (strcmp(fromUser, "") == 0)
+			{	
+				std::cout << "Server lost connection with User!!! ClientID: " << clientID << std::endl;
+				break;
+			}
 		}
 	}	
 }
@@ -110,6 +144,11 @@ void User::startGame()
 		}
 	}
 	close(sock);
+}
+
+void User::trimStr(std::string* str)
+{
+
 }
 
 void User::clearBuff(char* buff, int size)
