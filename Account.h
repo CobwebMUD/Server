@@ -36,12 +36,12 @@ class Account {
 			std::string date;
 		} details;
 	private:
-		bool exists(sqlite3 *db);
+		bool exists();
 		char const* dbFile = "game.db";
 		std::string accountName;
 		std::string accountPass;
 		std::string accountEmail;
 		std::string dateCreated;
-		void storeAccount(sqlite3 *db);
-		void findDetailsByUsername(sqlite3 *db);
+		void storeAccount();
+		void findDetailsByUsername();
 };
