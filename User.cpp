@@ -95,7 +95,6 @@ void User::uListen()
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 			// Remove trailing whitespace from input
 			std::string userInput = std::string(fromUser);
-			boost::algorithm::trim(userInput);
 			if (userInput == "GAMESTART") 
 			{
 				startGame(); 
