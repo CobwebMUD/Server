@@ -44,4 +44,5 @@ class Account {
 		std::string dateCreated;
 		void storeAccount();
 		void findDetailsByUsername();
+		void createAccountTable();
 };
