@@ -62,17 +62,16 @@ void User::uListen()
 		// log into existing account 
 		// get username from user
 		char const* prompt;
-		prompt = "What is your username? ";
+		prompt = "What is your username? \n";
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 		std::string userName = std::string(fromUser);
 		// get password from user
-		prompt = "Password: ";
+		prompt = "Password: \n";
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 		std::string userPass = std::string(fromUser);
 		std::cout << userName << " " << userPass << std::endl;
-		
 		Account account(userName, userPass);
 		if (!account.userExists) {
 			std::cout << "User does not exist: " << !account.userExists << std::endl;
@@ -128,7 +127,6 @@ void User::startGame()
 	int sock = socket(AF_UNIX, SOCK_STREAM, 0);
 	struct sockaddr_un addr;
 	addr.sun_family = AF_UNIX;
-	std::cout << socketP << std::endl;
 	strncpy(addr.sun_path, socketP, strlen(socketP));
 	unlink(socketP);
 	// bind socket to domain
@@ -157,12 +155,16 @@ void User::startGame()
 			// send the output from the game script to the user
 			std::cout << "from gameScript: " << recv << std::endl;
 			write(clientID, recv, strlen(recv));
-			// wait for response from user
-			clearBuff(recv, rChunkS);
-			read(clientID, recv, rChunkS);
-			std::cout << "from user: " << recv << std::endl;
-			// send users response to gamescript
-			write(gameInst, recv, strlen(recv));
+			// If message from game script is prefixed with "RSVP" then request input from user.
+			if (strncmp(recv, "RSVP", 4) == 0) 
+			{
+				// wait for response from user
+				clearBuff(recv, rChunkS);
+				read(clientID, recv, rChunkS);
+				std::cout << "from user: " << recv << std::endl;
+				// send users response to gamescript
+				write(gameInst, recv, strlen(recv));
+			}
 		} 
 		else 
 		{
