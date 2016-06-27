@@ -58,7 +58,6 @@ Account::Account(std::string userName, std::string pass) : accountName(userName)
 		findDetailsByUsername();		
 
 		if (details.pass == accountPass) {
-			std::cout << "Logging into account: " << details.name << ", " << details.pass << ", " << details.email << ", " << details.date << std::endl;
 			loggedIn = true;
 		}
 		else {

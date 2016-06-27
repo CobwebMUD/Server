@@ -73,8 +73,7 @@ void User::uListen()
 		std::string userPass = std::string(fromUser);
 		std::cout << userName << " " << userPass << std::endl;
 		Account account(userName, userPass);
-		if (!account.userExists) {
-			std::cout << "User does not exist: " << !account.userExists << std::endl;
+		if (account.userExists) {
 			if (account.loggedIn) {
 				std::cout << "You have logged in! " << account.loggedIn << std::endl;
 				loggedIn = true;
@@ -82,7 +81,7 @@ void User::uListen()
 				std::cout << "Error logging in! Incorrect password: " << account.loggedIn << std::endl;
 			}
 		} else {
-			std::cout << "Woops! User exists: " << !account.userExists << std::endl;
+			std::cout << "Woops! User does not exist." << std::endl;
 		}
 	}
 	if (loggedIn)
