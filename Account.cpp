@@ -52,10 +52,13 @@ Account::Account(std::string userName, std::string pass) : accountName(userName)
 
 	// Check if username exists
 	userExists = exists();
-	if (!userExists) {
+	std::cout << "User exists: " << userExists << std::endl;
+	if (userExists) {
 		// Gather info from username into struct 'details'
 		findDetailsByUsername();		
+
 		if (details.pass == accountPass) {
+			std::cout << "Logging into account: " << details.name << ", " << details.pass << ", " << details.email << ", " << details.date << std::endl;
 			loggedIn = true;
 		}
 		else {
