@@ -20,7 +20,7 @@
 User::User(int clientID) : clientID(clientID) 
 {
 	connected = true;
-	loggedIn = false;
+	loggedIn = false; 
 }
 
 User::~User()
@@ -71,8 +71,7 @@ void User::uListen()
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 		std::string userPass = std::string(fromUser);
-		std::cout << userName << " " << userPass << std::endl;
-		Account account(userName, userPass);
+		std::cout << userName << " " << userPass << std::endl; Account account(userName, userPass);
 		if (account.userExists) {
 			if (account.loggedIn) {
 				std::cout << "You have logged in! " << account.loggedIn << std::endl;
@@ -93,6 +92,7 @@ void User::uListen()
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 			// Remove trailing whitespace from input
 			std::string userInput = std::string(fromUser);
+			trimStr(&userInput);
 			if (userInput == "GAMESTART") 
 			{
 				startGame(); 
@@ -176,7 +176,21 @@ void User::startGame()
 
 void User::trimStr(std::string* str)
 {
-
+	int len = strlen(str->c_str());
+	char cStr[len];
+	strcpy(cStr, str->c_str());
+	int cIndex = (len - 1);
+	while(cStr[cIndex] == ' ') 
+	{
+		cIndex--;
+	}
+	*str = str->substr(0, (cIndex + 1));
+	cIndex = 0;
+	while(cStr[cIndex] == ' ')
+	{
+		cIndex++;
+	}
+	*str = str->substr(cIndex, strlen(str->c_str()));
 }
 
 void User::clearBuff(char* buff, int size)

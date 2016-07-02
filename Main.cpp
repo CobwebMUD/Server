@@ -25,8 +25,11 @@
 #include <string>
 #include "User.h"
 
+// Function declarations
+int clientDisconnect();
+
 // array of users logged on
-std::vector<User> users;
+std::vector<User*> users;
 
 int main() 
 {
@@ -60,20 +63,25 @@ int main()
 		//create user object to maintain clients connection 
 		User* user = new User(clientID);
 		user->service();
-		users.push_back(*user);
+		users.push_back(user);
 		std::cout << "Users online: " << users.size() << std::endl;
-		//loop through and remove disconnected clients from users vector 
-		for (int i = 0; i < users.size(); i++)
-		{
-			if (!users.at(i).getState())
-			{
-				//remove client
-				//User* user = &users.at(i);
-				//users.erase(users.begin() + i);
-				//delete user;
-			}
-		}
+		clientDisconnect();
 	}
 	close(servSocket);
+}
+
+int clientDisconnect() 
+{
+	// Loop through users and remove clients that have lost connection with the sever
+	for (int i = 0; i < users.size(); i++)
+	{
+		if (!users.at(i)->getState())
+		{
+			User* user = users.at(i);
+			users.erase(users.begin() + i);
+			delete user;
+			std::cout << "client disconnected" << std::endl;
+		}
+	}
 }
 
