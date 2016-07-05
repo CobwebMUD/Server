@@ -45,7 +45,6 @@ Account::Account(std::string userName, std::string pass, std::string email) : ac
 	}
 }
 
-
 // The constructor for logging into an existing account.
 Account::Account(std::string userName, std::string pass) : accountName(userName), accountPass(pass) {
 	createAccountTable();
@@ -132,7 +131,6 @@ bool Account::exists() {
 	char sqlString[] = "SELECT COUNT(*) FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
 	strcat(sqlString, "';");
-	std::cout << sqlString << std::endl;
 
 	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
@@ -164,8 +162,7 @@ void Account::findDetailsByUsername() {
 
 	char sqlString[] = "SELECT * FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
-	strcat(sqlString, "';");
-	std::cout << sqlString << std::endl;
+	strcat(sqlString, "';'");
 
 	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {

@@ -71,7 +71,8 @@ void User::uListen()
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 		std::string userPass = std::string(fromUser);
-		std::cout << userName << " " << userPass << std::endl; Account account(userName, userPass);
+		std::cout << userName << " " << userPass << std::endl;
+		Account account(userName, userPass);
 		if (account.userExists) {
 			if (account.loggedIn) {
 				std::cout << "You have logged in! " << account.loggedIn << std::endl;
