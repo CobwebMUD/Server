@@ -42,7 +42,7 @@ class Account {
 		std::string accountPass;
 		std::string accountEmail;
 		std::string dateCreated;
-		void storeAccount();
-		void findDetailsByUsername();
-		void createAccountTable();
+		int storeAccount();
+		int findDetailsByUsername();
+		int createAccountTable();
 };
