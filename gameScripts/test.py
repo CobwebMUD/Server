@@ -23,9 +23,11 @@ def output(msg, RSVP):
 
 
 #game stuff 
-name = output("whats your name", True)
-output("hia " + name + "!!!", False)
-output("Press enter to exit game", True)
+output("Welcome to cobweb MUD!", False)
+output("Press enter to receive helmet of safety :3", True)
+output("GIVE0/4", False)
+output("Type 'list inv' to view inventory", True)
+output("Nice job! Press enter to exit game", True)
 sock.send("<EXIT>\0".encode())
 sock.close()
 exit()

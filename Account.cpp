@@ -41,6 +41,11 @@ Account::Account(std::string userName, std::string pass, std::string email) : ac
 			{
 				std::cout << "Account created." << std::endl;
 				loggedIn = true;
+				
+				details.name = accountName;
+				details.pass = accountPass;
+				details.email = accountEmail;
+				details.date = dateCreated;
 			}
 			else 
 				std::cout << "failed to store account info" << std::endl;

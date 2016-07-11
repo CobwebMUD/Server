@@ -24,8 +24,9 @@ User::User(int clientID) : clientID(clientID)
 
 User::~User()
 {
-	// on object deconstruction delete account object 
+	// on object deconstruction delete account object / inventory
 	delete account;
+	delete inventory;
 }
 
 void User::uListen() 
@@ -117,6 +118,7 @@ void User::uListen()
 	{
 		while (true)
 		{
+			inventory = &(*new Inventory(account->details.name));
 			clearBuff(fromUser, (sizeof(fromUser) / sizeof(char)));
 			// listen for intput from User
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
@@ -130,11 +132,13 @@ void User::uListen()
 			else if (userInput == "EXIT")
 			{
 				std::cout << "User logged off!!! ClientID: " << clientID << std::endl;
+				inventory->saveInventory();
 				break;
 			}
 			else if (strcmp(fromUser, "") == 0)
 			{	
 				std::cout << "Server lost connection with User!!! ClientID: " << clientID << std::endl;
+				inventory->saveInventory();
 				break;
 			}
 		}
@@ -184,7 +188,7 @@ void User::startGame()
 			// send the output from the game script to the user
 			std::cout << "from gameScript: " << recv << std::endl;
 			write(clientID, recv, strlen(recv));
-			// "" means client has lost connection with server 
+			// "" means game script has lost connection with server 
 			if (strcmp(recv, "") == 0)
 			{
 				write(gameInst, "EXIT", 4);
@@ -202,9 +206,34 @@ void User::startGame()
 				{
 					write(gameInst, "EXIT", 4);
 					break;
+				} 
+				// client request for server
+				if (strcmp(recv, "list inv") == 0)
+				{
+					std::string inv;
+					std::vector<Inventory::Item>* items = inventory->getItems();
+					for (int i = 0; i < items->size(); i++)
+					{
+						inv += inventory->identifyItem(items->at(i).id);
+					}
+					inv += "\n";
+					write(clientID, inv.c_str(), strlen(inv.c_str()));
 				}
 				// send users response to gamescript
 				write(gameInst, recv, strlen(recv));
+			} 
+			// give player item by id
+			else if (strncmp(recv, "GIVE", 4) == 0)
+			{
+				char* values = &recv[4];
+				// Extract amt
+				int amt = atoi(&values[(strchr(values, '/') - values + 1)]);
+				// Extract id
+				char cID[(sizeof(values) / sizeof(char))];
+				strncpy(cID, values, (strchr(values, '/') - values));
+				int id = atoi(cID);
+				// Add the new item to inventory 
+				inventory->addItem(id, amt);	
 			}
 		} 
 		else 
