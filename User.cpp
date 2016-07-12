@@ -118,6 +118,7 @@ void User::uListen()
 	{
 		while (true)
 		{
+			// Create inventory object
 			inventory = &(*new Inventory(account->details.name));
 			clearBuff(fromUser, (sizeof(fromUser) / sizeof(char)));
 			// listen for intput from User
@@ -162,32 +163,31 @@ void User::startGame()
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, socketP, strlen(socketP));
 	unlink(socketP);
-	// bind socket to domain
+	// Bind socket to domain
 	if (bind(sock, (struct sockaddr*) &addr, sizeof(addr)) < 0)
 	{
 		std::cout << "failed to bind game server to ./sock" << clientID << std::endl;
+		return;
 	} 
-	// listen for incoming connections from newly spawned game script
+	// Listen for incoming connections from newly spawned game script
 	listen(sock, 1);
-	// start game script
+	// Start game script
 	char* sGCMD = new char[100];
 	strcpy(sGCMD, "python gameScripts/test.py ");
 	strcat(sGCMD, cClientID);
 	ProcSpawn pSpawn(sGCMD);
-	// accept connection
+	// Accept connection
 	int gameInst = accept(sock, NULL, NULL);
 	int rChunkS = 1000;
 	char recv[rChunkS];
 	while (true)
 	{
 		clearBuff(recv, rChunkS);
-		// read data from game script 
+		// Read data from game script 
 		read(gameInst, recv, rChunkS);
 		if (strcmp(recv, "<EXIT>") != 0)
 		{	
-			// send the output from the game script to the user
 			std::cout << "from gameScript: " << recv << std::endl;
-			write(clientID, recv, strlen(recv));
 			// "" means game script has lost connection with server 
 			if (strcmp(recv, "") == 0)
 			{
@@ -197,7 +197,9 @@ void User::startGame()
 			// If message from game script is prefixed with "RSVP" then request input from user.
 			else if (strncmp(recv, "RSVP", 4) == 0) 
 			{
-				// wait for response from user
+				// Send the output from the game script to the user
+				write(clientID, recv, strlen(recv));
+				// Wait for response from user
 				clearBuff(recv, rChunkS);
 				read(clientID, recv, rChunkS);
 				std::cout << "from user: " << recv << std::endl;
@@ -207,7 +209,7 @@ void User::startGame()
 					write(gameInst, "EXIT", 4);
 					break;
 				} 
-				// client request for server
+				// Client request for server
 				if (strcmp(recv, "list inv") == 0)
 				{
 					std::string inv;
@@ -216,10 +218,9 @@ void User::startGame()
 					{
 						inv += inventory->identifyItem(items->at(i).id);
 					}
-					inv += "\n";
 					write(clientID, inv.c_str(), strlen(inv.c_str()));
 				}
-				// send users response to gamescript
+				// Send users response to gamescript
 				write(gameInst, recv, strlen(recv));
 			} 
 			// give player item by id
@@ -234,6 +235,11 @@ void User::startGame()
 				int id = atoi(cID);
 				// Add the new item to inventory 
 				inventory->addItem(id, amt);	
+			}
+			else 
+			{
+				// Send the output from the game script to the user
+				write(clientID, recv, strlen(recv));
 			}
 		} 
 		else 
