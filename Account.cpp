@@ -2,77 +2,89 @@
  * =====================================================================================
  *
  *       Filename:  Account.cpp
- *
- *    Description:  Implementation of Account class
+ * *    Description:  Implementation of Account class
  *
  *        Version:  1.0
  *        Created:  06/19/2016 08:11:38 PM
  *       Revision:  none
- *       Compiler:  gcc
- *
+ *       Compiler:  gcc *
  *         Author:  
  *   Organization:  CobwebMUD 
  *
- * =====================================================================================
- */
+ * ===================================================================================== */
 
 #include "Account.h"
 
-// The constructor for a new account.
-Account::Account(std::string userName, std::string pass, std::string email) : accountName(userName), accountPass(pass), accountEmail(email) {
-	// Set dateCreated to the current time based on GMT timezone formatted as a string.
-	time_t secs;
-	struct tm * timeCreated;
-	char dateStr[80];
-
+// The constructor for a new account.  
+Account::Account(std::string userName, std::string pass, std::string email) : accountName(userName), accountPass(pass), accountEmail(email) 
+{ 
+	// Set dateCreated to the current time based on GMT timezone formatted as a string.  
+	time_t secs; 
+	struct tm * timeCreated; 
+	char dateStr[80]; 
 	time(&secs);
 	timeCreated = gmtime(&secs);
 	strftime(dateStr, 80, "%F %X", timeCreated);
 	dateCreated = dateStr;
-	std::cout << "Account object initialized at " << dateCreated << std::endl;
-	std::cout << "accountName: " << accountName << ", " << " accountPass: " << accountPass << ", " << " accountEmail: " << accountEmail << std::endl;
-	// Create Account table if it doesn't exist.
-	createAccountTable();
-
-	userExists = exists();
-	if (!userExists) {
-		std::cout << "User does not exist!" << std::endl;
-		storeAccount();
-		// Assuming no errors comes up during the storing of the account details...
-		std::cout << "Account created." << std::endl;
-	} else {
-		std::cout << "Failure creating account, username already exists." << std::endl;
-	}
+	std::cout << "New account created";
+	std::cout << " User name: " << accountName;
+	std::cout << " pass: " << accountPass;
+	std::cout << " email: " << accountEmail;
+	std::cout << " date created: " << dateCreated << std::endl;
+	// Create account 
+	if (createAccountTable() == 0)
+	{
+		userExists = exists();
+		if (!userExists) 
+		{
+			if (storeAccount() == 0)
+			{
+				std::cout << "Account created." << std::endl;
+				loggedIn = true;
+				
+				details.name = accountName;
+				details.pass = accountPass;
+				details.email = accountEmail;
+				details.date = dateCreated;
+			}
+			else 
+				std::cout << "failed to store account info" << std::endl;
+		} 
+		else 
+			std::cout << "failed to creating account, username already exists." << std::endl;
+	} 
+	else 
+		std::cout << "Unable to create account table" << std::endl;
 }
-
 
 // The constructor for logging into an existing account.
-Account::Account(std::string userName, std::string pass) : accountName(userName), accountPass(pass) {
-	createAccountTable();
-
-	// Check if username exists
-	userExists = exists();
-	std::cout << "User exists: " << userExists << std::endl;
-	if (userExists) {
-		// Gather info from username into struct 'details'
-		findDetailsByUsername();		
-
-		if (details.pass == accountPass) {
-			loggedIn = true;
-		}
-		else {
+Account::Account(std::string userName, std::string pass) : accountName(userName), accountPass(pass) 
+{
+	if (createAccountTable() == 0)
+	{
+		// Check if username exists
+		userExists = exists();
+		if (userExists) 
+		{
+			// Gather info from username into struct 'details'
+			if (findDetailsByUsername() == 0)
+				loggedIn = (details.pass == accountPass);
+			else 
+				std::cout << "failed to get them juicy details" << std::endl;
+		} 
+		else 
 			loggedIn = false;
-		}
-	} else {
-		loggedIn = false;
 	}
+	else 
+		std::cout << "Unable to create account table" << std::endl;
 }
 
-void Account::createAccountTable() {
+int Account::createAccountTable() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
 	if (rc) {
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		return -1;
 	}
 
 	// Create Account table in database.
@@ -88,17 +100,19 @@ void Account::createAccountTable() {
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Error creating table Account: %s\n", errMsg);
 		sqlite3_free(errMsg);
-		exit(-1);
+		return -1;
 	}
 	sqlite3_close(db);
+	return 0;
 }
 
 // Function to store a new account details in database.
-void Account::storeAccount() {
+int Account::storeAccount() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
 	if (rc) {
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		return -1;
 	}
 
 	sqlite3_stmt *stmt;
@@ -113,54 +127,66 @@ void Account::storeAccount() {
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr,"ERROR executing statement: %s\n", sqlite3_errmsg(db));
+		return -1;
 	}
-
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
-};
+	return 0;
+}
 
 bool Account::exists() {
-	std::cout << "Called exists() function." << std::endl;
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) {
+	if (rc) 
+	{
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		return false;
 	}
-
 	sqlite3_stmt *stmt;
 	// Check if account name already exists.
+<<<<<<< HEAD
 	char sqlString[] = "SELECT COUNT(*) FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
 	strcat(sqlString, "';");
 	std::cout << sqlString << std::endl;
 
 	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
+=======
+	std::string sqlString = "SELECT COUNT(*) FROM Account WHERE Username = '";
+	sqlString += accountName;
+	sqlString +=  "';\0";
+	rc = sqlite3_prepare_v2(db, sqlString.c_str(), -1, &stmt, NULL);
+>>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "ERROR preparing database for exists() function: %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		exit(-1);
+		return false;
 	}
 	// Execute statement
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
-		fprintf(stderr,"ERROR executing statement: %s\n", sqlite3_errmsg(db));
+		fprintf(stderr, "ERROR executing statement: %s\n", sqlite3_errmsg(db));
+		return false;
 	}
 	int count = sqlite3_column_int(stmt, 0);
 	std::cout << "Number of users with same username existing: " << count << std::endl;
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return (count > 0);
-};
+}
 
 // Function that uses the account's username and returns account info.
-void Account::findDetailsByUsername() {
+int Account::findDetailsByUsername() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) {
+	if (rc) 
+	{
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		return -1;
 	}
 
 	sqlite3_stmt *stmt;
+<<<<<<< HEAD
 
 	char sqlString[] = "SELECT * FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
@@ -168,10 +194,16 @@ void Account::findDetailsByUsername() {
 	std::cout << sqlString << std::endl;
 
 	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
+=======
+	std::string sqlString = "SELECT * FROM Account WHERE Username = '";
+	sqlString += accountName;
+	sqlString += "';";
+	rc = sqlite3_prepare_v2(db, sqlString.c_str(), -1, &stmt, NULL);
+>>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "ERROR preparing database for finding details: %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		exit(-1);
+		return -1;
 	}
 	rc = sqlite3_step(stmt);
 	sqlite3_close(db);
@@ -186,4 +218,6 @@ void Account::findDetailsByUsername() {
 	details.pass = pass;
 	details.email = email;
 	details.date = date;
+
+	return 0;
 }

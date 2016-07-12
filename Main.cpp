@@ -37,8 +37,7 @@ int main()
 
 	//server socket creation
 	struct sockaddr_in socketDef;
-	socketDef.sin_family = AF_INET;
-	socketDef.sin_port = htons(port);
+	socketDef.sin_family = AF_INET; socketDef.sin_port = htons(port);
 	socketDef.sin_addr.s_addr = INADDR_ANY;
 
 	int servSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

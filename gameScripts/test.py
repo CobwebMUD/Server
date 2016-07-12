@@ -11,16 +11,24 @@ sock.connect(serverP)
 def output(msg, RSVP):
     if RSVP == True:
         sock.send(("RSVP" + msg + "\n\0").encode())
-        return sock.recv(100).decode()
+        fromServer = sock.recv(100).decode()
+        if fromServer == "EXIT":
+            print("server requested emergency exit!")
+            exit()
+        else:
+            return fromServer
     else:
         sock.send((msg + "\n\0").encode())
         time.sleep(1)
 
 
 #game stuff 
-name = output("whats your name", True)
-output("hia " + name + "!!!", False)
-output("Press enter to exit game", True)
+output("Welcome to cobweb MUD!", False)
+output("Press enter to receive helmet of safety :3", True)
+output("GIVE0/4", False)
+output("GIVE1/1", False)
+output("Type 'list inv' to view inventory", True)
+output("Nice job! press enter to exit game", True)
 sock.send("<EXIT>\0".encode())
 sock.close()
 exit()

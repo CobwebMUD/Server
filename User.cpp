@@ -8,8 +8,7 @@
  *        Version:  1.0 
  *        Created:  06/12/2016 10:03:35 PM
  *       Revision:  none
- *       Compiler:  GCC
- *
+ *       Compiler:  GCC *
  *         Author:  Rice Shelley
  *   Organization:  Cobweb dev team 
  *
@@ -25,8 +24,9 @@ User::User(int clientID) : clientID(clientID)
 
 User::~User()
 {
-	// on object deconstruction delete account object 
+	// on object deconstruction delete account object / inventory
 	delete account;
+	delete inventory;
 }
 
 void User::uListen() 
@@ -37,27 +37,51 @@ void User::uListen()
 	write(clientID, "LOGIN\n", 7); 
 	read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));	
 	
-	if (strcmp(fromUser, "NEWACC") == 0)
+	if (strcmp(fromUser, "NEW") == 0)
 	{
 		// create new account 
-		// get credentials form user
+		// get credentials from user
+		char const* prompt;
+
+		// get user name 
+		prompt = "Enter username: \n";
+		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
-		std::string accInfoBlk = std::string(fromUser);
-		// create array of user info -> contains username, pass, email 
-		std::string accInfo[3];
-		// get info out of accInfoBlk and store it in accInfo array
-		for (int i = 0; i < 3; i++)
+		if (strcmp(fromUser, "") == 0)
 		{
-			accInfoBlk = accInfoBlk.substr(accInfoBlk.find("/") + 1, accInfoBlk.size());	
-			accInfo[i] = accInfoBlk.substr(0, accInfoBlk.find("/"));
+			return;
+		}	
+		std::string userName;
+		userName = fromUser;
+
+		// get password 
+		prompt = "Enter password: \n";
+		write(clientID, prompt, strlen(prompt));
+		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		if (strcmp(fromUser, "") == 0)
+		{
+			return;
 		}
-		// create new account object with credentails
-		std::cout << accInfo[0] << " " << accInfo[1] << " " << accInfo[2] << std::endl;
-		// create new account 
-		account = new Account(accInfo[0], accInfo[1], accInfo[2]);
-		loggedIn = true;
+		std::string pass;
+		pass = fromUser;
+
+		// get email
+		prompt = "Enter email: \n";
+		write(clientID, prompt, strlen(prompt));
+		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		if (strcmp(fromUser, "") == 0)
+		{
+			return;
+		}
+		std::string email;
+		email = fromUser;
+
+		// create new acount
+		account = new Account(userName, pass, email);
+		loggedIn = account->loggedIn;
+		std::cout << loggedIn << std::endl;
 	}
-	else if (strcmp(fromUser, "EXISTACC") == 0) 
+	else if (strcmp(fromUser, "EXISTING") == 0) 
 	{
 		// log into existing account 
 		// get username from user
@@ -65,12 +89,22 @@ void User::uListen()
 		prompt = "What is your username? \n";
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		if (strcmp(fromUser, "") == 0)
+		{
+			return;
+		}
 		std::string userName = std::string(fromUser);
+
 		// get password from user
 		prompt = "Password: \n";
 		write(clientID, prompt, strlen(prompt));
 		read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
+		if (strcmp(fromUser, "") == 0)
+		{
+			return;
+		}
 		std::string userPass = std::string(fromUser);
+<<<<<<< HEAD
 		std::cout << userName << " " << userPass << std::endl;
 		Account account(userName, userPass);
 		if (account.userExists) {
@@ -81,14 +115,25 @@ void User::uListen()
 				std::cout << "Error logging in! Incorrect password: " << account.loggedIn << std::endl;
 			}
 		} else {
+=======
+
+		// create account object 
+		account = new Account(userName, userPass);
+
+		// verify that account exists
+		if (account->userExists) 
+			loggedIn = account->loggedIn;
+		else
+>>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
 			std::cout << "Woops! User does not exist." << std::endl;
-		}
 	}
 	if (loggedIn)
 	{
 		while (true)
 		{
-			clearBuff(fromUser, 120);
+			// Create inventory object
+			inventory = &(*new Inventory(account->details.name));
+			clearBuff(fromUser, (sizeof(fromUser) / sizeof(char)));
 			// listen for intput from User
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
 			// Remove trailing whitespace from input
@@ -101,11 +146,13 @@ void User::uListen()
 			else if (userInput == "EXIT")
 			{
 				std::cout << "User logged off!!! ClientID: " << clientID << std::endl;
+				inventory->saveInventory();
 				break;
 			}
 			else if (strcmp(fromUser, "") == 0)
 			{	
 				std::cout << "Server lost connection with User!!! ClientID: " << clientID << std::endl;
+				inventory->saveInventory();
 				break;
 			}
 		}
@@ -129,41 +176,83 @@ void User::startGame()
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, socketP, strlen(socketP));
 	unlink(socketP);
-	// bind socket to domain
+	// Bind socket to domain
 	if (bind(sock, (struct sockaddr*) &addr, sizeof(addr)) < 0)
 	{
 		std::cout << "failed to bind game server to ./sock" << clientID << std::endl;
+		return;
 	} 
-	// listen for incoming connections from newly spawned game script
+	// Listen for incoming connections from newly spawned game script
 	listen(sock, 1);
-	// start game script
+	// Start game script
 	char* sGCMD = new char[100];
 	strcpy(sGCMD, "python gameScripts/test.py ");
 	strcat(sGCMD, cClientID);
 	ProcSpawn pSpawn(sGCMD);
-	// accept connection
+	// Accept connection
 	int gameInst = accept(sock, NULL, NULL);
 	int rChunkS = 1000;
 	char recv[rChunkS];
 	while (true)
 	{
 		clearBuff(recv, rChunkS);
-		// read data from game script 
+		// Read data from game script 
 		read(gameInst, recv, rChunkS);
 		if (strcmp(recv, "<EXIT>") != 0)
 		{	
-			// send the output from the game script to the user
 			std::cout << "from gameScript: " << recv << std::endl;
-			write(clientID, recv, strlen(recv));
-			// If message from game script is prefixed with "RSVP" then request input from user.
-			if (strncmp(recv, "RSVP", 4) == 0) 
+			// "" means game script has lost connection with server 
+			if (strcmp(recv, "") == 0)
 			{
-				// wait for response from user
+				write(gameInst, "EXIT", 4);
+				break;
+			}
+			// If message from game script is prefixed with "RSVP" then request input from user.
+			else if (strncmp(recv, "RSVP", 4) == 0) 
+			{
+				// Send the output from the game script to the user
+				write(clientID, recv, strlen(recv));
+				// Wait for response from user
 				clearBuff(recv, rChunkS);
 				read(clientID, recv, rChunkS);
 				std::cout << "from user: " << recv << std::endl;
-				// send users response to gamescript
+				// "" means client has lost connection with server 
+				if (strcmp(recv, "") == 0)
+				{
+					write(gameInst, "EXIT", 4);
+					break;
+				} 
+				// Client request for server
+				if (strcmp(recv, "list inv") == 0)
+				{
+					std::string inv;
+					std::vector<Inventory::Item>* items = inventory->getItems();
+					for (int i = 0; i < items->size(); i++)
+					{
+						inv += inventory->identifyItem(items->at(i).id);
+					}
+					write(clientID, inv.c_str(), strlen(inv.c_str()));
+				}
+				// Send users response to gamescript
 				write(gameInst, recv, strlen(recv));
+			} 
+			// give player item by id
+			else if (strncmp(recv, "GIVE", 4) == 0)
+			{
+				char* values = &recv[4];
+				// Extract amt
+				int amt = atoi(&values[(strchr(values, '/') - values + 1)]);
+				// Extract id
+				char cID[(sizeof(values) / sizeof(char))];
+				strncpy(cID, values, (strchr(values, '/') - values));
+				int id = atoi(cID);
+				// Add the new item to inventory 
+				inventory->addItem(id, amt);	
+			}
+			else 
+			{
+				// Send the output from the game script to the user
+				write(clientID, recv, strlen(recv));
 			}
 		} 
 		else 
@@ -178,20 +267,23 @@ void User::startGame()
 void User::trimStr(std::string* str)
 {
 	int len = strlen(str->c_str());
-	char cStr[len];
-	strcpy(cStr, str->c_str());
-	int cIndex = (len - 1);
-	while(cStr[cIndex] == ' ') 
+	if (len > 0) 
 	{
-		cIndex--;
+		char cStr[len];
+		strcpy(cStr, str->c_str());
+		int cIndex = (len - 1);
+		while(cStr[cIndex] == ' ') 
+		{
+			cIndex--;
+		}
+		*str = str->substr(0, (cIndex + 1));
+		cIndex = 0;
+		while(cStr[cIndex] == ' ')
+		{
+			cIndex++;
+		}
+		*str = str->substr(cIndex, strlen(str->c_str()));
 	}
-	*str = str->substr(0, (cIndex + 1));
-	cIndex = 0;
-	while(cStr[cIndex] == ' ')
-	{
-		cIndex++;
-	}
-	*str = str->substr(cIndex, strlen(str->c_str()));
 }
 
 void User::clearBuff(char* buff, int size)

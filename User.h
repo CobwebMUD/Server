@@ -27,6 +27,7 @@
 #include <regex>
 #include "ProcSpawn.h"
 #include "Account.h"
+#include "Inventory.h"
 
 class User {
 	public:
@@ -41,6 +42,7 @@ class User {
 		void trimStr(std::string* str);
 		static void* threadEntry(void* p);	
 		Account* account;
+		Inventory* inventory;
 		bool loggedIn;
 		bool connected;
 		int clientID;
