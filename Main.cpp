@@ -24,6 +24,7 @@
 #include <netinet/in.h>
 #include <string>
 #include "User.h"
+#include "ChatRoom.h"
 
 // Function declarations
 int clientDisconnect();
@@ -37,7 +38,8 @@ int main()
 
 	//server socket creation
 	struct sockaddr_in socketDef;
-	socketDef.sin_family = AF_INET; socketDef.sin_port = htons(port);
+	socketDef.sin_family = AF_INET; 
+	socketDef.sin_port = htons(port);
 	socketDef.sin_addr.s_addr = INADDR_ANY;
 
 	int servSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -48,6 +50,9 @@ int main()
 		std::cout << "Error binding socket to port: " << port << std::endl;
 		return -1;
 	}
+	
+	// example chat room
+	ChatRoom* cr = new ChatRoom("MY CHAT SERVER", 8575);
 
 	//allow socket to start listening for connections 	
 	listen(servSocket, 5);
