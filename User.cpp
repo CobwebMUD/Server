@@ -32,12 +32,20 @@ User::~User()
 void User::uListen() 
 {
 	char fromUser[120];
-	
+
+	std::string sendToUser = "                             Welcome to CobwebMUD!\n\n                                   (1) Login\n                            (2) Create a new account\n";
 	// if client is not yet logged on 
-	write(clientID, "LOGIN\n", 7); 
+	write(clientID, sendToUser.c_str(), sendToUser.length()); 
 	read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));	
+
+	if (strcmp(fromUser, "") == 0) {
+		return;
+	}
+
+	std::string userInput = std::string(fromUser);
+	trimStr(userInput);
 	
-	if (strcmp(fromUser, "NEW") == 0)
+	if (userInput == "2")
 	{
 		// create new account 
 		// get credentials from user
@@ -51,8 +59,8 @@ void User::uListen()
 		{
 			return;
 		}	
-		std::string userName;
-		userName = fromUser;
+		std::string userName = std::string(fromUser);
+		trimStr(userName);
 
 		// get password 
 		prompt = "Enter password: \n";
@@ -62,8 +70,8 @@ void User::uListen()
 		{
 			return;
 		}
-		std::string pass;
-		pass = fromUser;
+		std::string pass = fromUser;
+		trimStr(pass);
 
 		// get email
 		prompt = "Enter email: \n";
@@ -73,15 +81,19 @@ void User::uListen()
 		{
 			return;
 		}
-		std::string email;
-		email = fromUser;
+		std::string email = fromUser;
+		trimStr(email);
 
 		// create new acount
 		account = new Account(userName, pass, email);
 		loggedIn = account->loggedIn;
 		std::cout << loggedIn << std::endl;
+
+		// create a new example character
+		std::vector<std::string> keywords {"tiny", "young", "woman"};
+		character = new Character(userName, "Lisa", keywords, "the tiny, young woman", "This woman is rather fine looking, and she stands way\nbelow the average height of many humans.");
 	}
-	else if (strcmp(fromUser, "EXISTING") == 0) 
+	else if (userInput == "1") 
 	{
 		// log into existing account 
 		// get username from user
@@ -94,6 +106,7 @@ void User::uListen()
 			return;
 		}
 		std::string userName = std::string(fromUser);
+		trimStr(userName);
 
 		// get password from user
 		prompt = "Password: \n";
@@ -104,28 +117,19 @@ void User::uListen()
 			return;
 		}
 		std::string userPass = std::string(fromUser);
-<<<<<<< HEAD
-		std::cout << userName << " " << userPass << std::endl;
-		Account account(userName, userPass);
-		if (account.userExists) {
-			if (account.loggedIn) {
-				std::cout << "You have logged in! " << account.loggedIn << std::endl;
+		trimStr(userPass);
+
+		account = new Account(userName, userPass);
+		if (account->userExists) {
+			if (account->loggedIn) {
+				prompt = "You have logged in!\n";
+				write(clientID, prompt, strlen(prompt));
 				loggedIn = true;
 			} else {
-				std::cout << "Error logging in! Incorrect password: " << account.loggedIn << std::endl;
+				prompt = "Failed to log in. Account does not exist.\n";
+				write(clientID, prompt, strlen(prompt));
 			}
-		} else {
-=======
-
-		// create account object 
-		account = new Account(userName, userPass);
-
-		// verify that account exists
-		if (account->userExists) 
-			loggedIn = account->loggedIn;
-		else
->>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
-			std::cout << "Woops! User does not exist." << std::endl;
+		}
 	}
 	if (loggedIn)
 	{
@@ -136,9 +140,8 @@ void User::uListen()
 			clearBuff(fromUser, (sizeof(fromUser) / sizeof(char)));
 			// listen for intput from User
 			read(clientID, fromUser, (sizeof(fromUser) / sizeof(char)));
-			// Remove trailing whitespace from input
 			std::string userInput = std::string(fromUser);
-			trimStr(&userInput);
+			trimStr(userInput);
 			if (userInput == "GAMESTART") 
 			{
 				startGame(); 
@@ -264,26 +267,19 @@ void User::startGame()
 	close(sock);
 }
 
-void User::trimStr(std::string* str)
-{
-	int len = strlen(str->c_str());
-	if (len > 0) 
-	{
-		char cStr[len];
-		strcpy(cStr, str->c_str());
-		int cIndex = (len - 1);
-		while(cStr[cIndex] == ' ') 
-		{
-			cIndex--;
-		}
-		*str = str->substr(0, (cIndex + 1));
-		cIndex = 0;
-		while(cStr[cIndex] == ' ')
-		{
-			cIndex++;
-		}
-		*str = str->substr(cIndex, strlen(str->c_str()));
-	}
+void User::ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+void User::rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+
+void User::trimStr(std::string &s) {
+    ltrim(s);
+    rtrim(s);
 }
 
 void User::clearBuff(char* buff, int size)

@@ -25,8 +25,14 @@
 #include <string>
 #include <sstream>
 #include <regex>
+#include <boost/algorithm/string.hpp>
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
 #include "ProcSpawn.h"
 #include "Account.h"
+#include "Character.h"
 #include "Inventory.h"
 
 class User {
@@ -39,9 +45,12 @@ class User {
 		void uListen();
 		void startGame();
 		void clearBuff(char* buff, int size);
-		void trimStr(std::string* str);
+		void ltrim(std::string &s);
+		void rtrim(std::string &s);
+		void trimStr(std::string &s);
 		static void* threadEntry(void* p);	
 		Account* account;
+		Character* character;
 		Inventory* inventory;
 		bool loggedIn;
 		bool connected;

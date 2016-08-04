@@ -26,10 +26,9 @@ Account::Account(std::string userName, std::string pass, std::string email) : ac
 	timeCreated = gmtime(&secs);
 	strftime(dateStr, 80, "%F %X", timeCreated);
 	dateCreated = dateStr;
-	std::cout << "New account created";
-	std::cout << " User name: " << accountName;
-	std::cout << " pass: " << accountPass;
-	std::cout << " email: " << accountEmail;
+	std::cout << " User name: " << accountName << std::endl;
+	std::cout << " pass: " << accountPass << std::endl;
+	std::cout << " email: " << accountEmail << std::endl;
 	std::cout << " date created: " << dateCreated << std::endl;
 	// Create account 
 	if (createAccountTable() == 0)
@@ -82,8 +81,9 @@ Account::Account(std::string userName, std::string pass) : accountName(userName)
 int Account::createAccountTable() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) {
+	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
 		return -1;
 	}
 
@@ -93,13 +93,14 @@ int Account::createAccountTable() {
 		"ID INTEGER PRIMARY KEY," 
 		"Username TEXT NOT NULL," 
 		"Password TEXT NOT NULL," 
-		"Email TEXT,"
+		"Email TEXT NOT NULL,"
 		"DateCreated TEXT NOT NULL);";
 	char* errMsg;
 	rc = sqlite3_exec(db, sql, 0, 0, &errMsg);
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Error creating table Account: %s\n", errMsg);
 		sqlite3_free(errMsg);
+		sqlite3_close(db);
 		return -1;
 	}
 	sqlite3_close(db);
@@ -110,8 +111,9 @@ int Account::createAccountTable() {
 int Account::storeAccount() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) {
+	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
 		return -1;
 	}
 
@@ -127,6 +129,8 @@ int Account::storeAccount() {
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr,"ERROR executing statement: %s\n", sqlite3_errmsg(db));
+		sqlite3_finalize(stmt);
+		sqlite3_close(db);
 		return -1;
 	}
 	sqlite3_finalize(stmt);
@@ -137,28 +141,21 @@ int Account::storeAccount() {
 bool Account::exists() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) 
+	if (rc != SQLITE_OK) 
 	{
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
 		return false;
 	}
 	sqlite3_stmt *stmt;
 	// Check if account name already exists.
-<<<<<<< HEAD
 	char sqlString[] = "SELECT COUNT(*) FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
 	strcat(sqlString, "';");
-	std::cout << sqlString << std::endl;
-
 	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
-=======
-	std::string sqlString = "SELECT COUNT(*) FROM Account WHERE Username = '";
-	sqlString += accountName;
-	sqlString +=  "';\0";
-	rc = sqlite3_prepare_v2(db, sqlString.c_str(), -1, &stmt, NULL);
->>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "ERROR preparing database for exists() function: %s\n", sqlite3_errmsg(db));
+		sqlite3_finalize(stmt);
 		sqlite3_close(db);
 		return false;
 	}
@@ -166,6 +163,8 @@ bool Account::exists() {
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr, "ERROR executing statement: %s\n", sqlite3_errmsg(db));
+		sqlite3_finalize(stmt);
+		sqlite3_close(db);
 		return false;
 	}
 	int count = sqlite3_column_int(stmt, 0);
@@ -179,40 +178,39 @@ bool Account::exists() {
 int Account::findDetailsByUsername() {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
-	if (rc) 
+	if (rc != SQLITE_OK) 
 	{
 		fprintf(stderr, "Error when opening database: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
 		return -1;
 	}
 
 	sqlite3_stmt *stmt;
-<<<<<<< HEAD
 
 	char sqlString[] = "SELECT * FROM Account WHERE Username = '";
 	strcat(sqlString, accountName.c_str());
 	strcat(sqlString, "';");
 	std::cout << sqlString << std::endl;
 
-	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
-=======
-	std::string sqlString = "SELECT * FROM Account WHERE Username = '";
-	sqlString += accountName;
-	sqlString += "';";
-	rc = sqlite3_prepare_v2(db, sqlString.c_str(), -1, &stmt, NULL);
->>>>>>> 5a9584f5a8dcd300a594324fe03c6aeabae307fc
-	if (rc != SQLITE_OK) {
+	sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
+	rc = sqlite3_step(stmt);
+	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr, "ERROR preparing database for finding details: %s\n", sqlite3_errmsg(db));
+		std::cout << "Error preparing database." << std::endl;
+		sqlite3_finalize(stmt);
 		sqlite3_close(db);
 		return -1;
 	}
-	rc = sqlite3_step(stmt);
-	sqlite3_close(db);
 
 	// Cast text returned by sqlite3_column_text to strings.
+	std::cout << sqlite3_column_text(stmt, 0) << std::endl;
 	std::string name(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
 	std::string pass(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
 	std::string email(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
 	std::string date(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
 	
 	details.name = name;
 	details.pass = pass;

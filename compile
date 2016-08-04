@@ -1,3 +1,3 @@
 #!/bin/sh
-g++ Main.cpp User.cpp ProcSpawn.cpp Account.cpp Inventory.cpp ChatRoom.cpp -o cobweb -lpthread -lsqlite3
+g++ Main.cpp User.cpp ProcSpawn.cpp Account.cpp Inventory.cpp ChatRoom.cpp Character.cpp -o cobweb -lpthread -lsqlite3
 echo "Done!"

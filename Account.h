@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sqlite3.h>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <ctime>
 
@@ -37,7 +37,7 @@ class Account {
 		} details;
 	private:
 		bool exists();
-		char const* dbFile = "game.db";
+		char const* dbFile = "data/game.db";
 		std::string accountName;
 		std::string accountPass;
 		std::string accountEmail;
