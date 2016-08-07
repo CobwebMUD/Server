@@ -18,6 +18,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <cstring>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -28,18 +29,39 @@
 
 class Character {
 	public:
-		Character(std::string accountName, std::string name, std::vector<std::string> keywords, std::string shortDesc, std::string mainDesc);
-		Character(std::string accountName, int ID, std::string name);
+		Character(const char * accountName, const char * name, std::vector<std::string> keywords, const char * shortDesc, const char * mainDesc);
+		Character(int ID);
+		Character(const char * accountName);
+		int getID();
+		int getLoc();
+		std::string getAccountName();
+		std::string getName();
+		std::vector<std::string> getKeywords();
+		std::string getSDesc();
+		std::string getMDesc();
+		struct CharInd {
+			int ID;
+			std::string name;
+			int ind;
+		};
+		std::vector<Character::CharInd> getAccountChars();
 	private:
 		char const* dbFile = "data/game.db";
-		std::string charAccountName;
+
 		int charID;
+		int charLocation;
+		std::string charAccountName;
 		std::string charName;
 		std::vector<std::string> charKeywords;
-		std::string charShort;
-		std::string charMain;
-		int charLocation;
+		std::string charSDesc;
+		std::string charMDesc;
+		std::string timeCreated;
+		std::vector<CharInd> accountChars;
+
 		int createCharTable();
 		int storeCharInDB();
+		int gatherDetailsByID();
+		int gatherDetailsByCharName();
 		std::string joinVectorString(std::vector<std::string> v);
+		int gatherAccountCharsFromDB();
 };

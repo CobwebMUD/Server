@@ -18,23 +18,23 @@
 // The constructor for a new account.  
 Account::Account(std::string userName, std::string pass, std::string email) : accountName(userName), accountPass(pass), accountEmail(email) 
 { 
-	// Set dateCreated to the current time based on GMT timezone formatted as a string.  
-	time_t secs; 
-	struct tm * timeCreated; 
-	char dateStr[80]; 
-	time(&secs);
-	timeCreated = gmtime(&secs);
-	strftime(dateStr, 80, "%F %X", timeCreated);
-	dateCreated = dateStr;
+	// Set timeCreated to a unix timestamp. 
+	time_t timestamp; 
+	struct tm * timeGMT;
+	char dateStr[80];
+	
+	time(&timestamp);
+	timeGMT = gmtime(&timestamp);
+	strftime(dateStr, 80, "%F %X", timeGMT);
+	timeCreated = dateStr;
 	std::cout << " User name: " << accountName << std::endl;
 	std::cout << " pass: " << accountPass << std::endl;
 	std::cout << " email: " << accountEmail << std::endl;
-	std::cout << " date created: " << dateCreated << std::endl;
+	std::cout << " date created: " << timeCreated << std::endl;
 	// Create account 
 	if (createAccountTable() == 0)
 	{
-		userExists = exists();
-		if (!userExists) 
+		if (!exists()) 
 		{
 			if (storeAccount() == 0)
 			{
@@ -44,7 +44,7 @@ Account::Account(std::string userName, std::string pass, std::string email) : ac
 				details.name = accountName;
 				details.pass = accountPass;
 				details.email = accountEmail;
-				details.date = dateCreated;
+				details.date = timeCreated;
 			}
 			else 
 				std::cout << "failed to store account info" << std::endl;
@@ -62,8 +62,7 @@ Account::Account(std::string userName, std::string pass) : accountName(userName)
 	if (createAccountTable() == 0)
 	{
 		// Check if username exists
-		userExists = exists();
-		if (userExists) 
+		if (exists()) 
 		{
 			// Gather info from username into struct 'details'
 			if (findDetailsByUsername() == 0)
@@ -91,10 +90,10 @@ int Account::createAccountTable() {
 	char const* sql =
 		"CREATE TABLE IF NOT EXISTS Account ("
 		"ID INTEGER PRIMARY KEY," 
-		"Username TEXT NOT NULL," 
+		"UserName TEXT NOT NULL," 
 		"Password TEXT NOT NULL," 
 		"Email TEXT NOT NULL,"
-		"DateCreated TEXT NOT NULL);";
+		"TimeCreated TEXT NOT NULL);";
 	char* errMsg;
 	rc = sqlite3_exec(db, sql, 0, 0, &errMsg);
 	if (rc != SQLITE_OK) {
@@ -119,12 +118,12 @@ int Account::storeAccount() {
 
 	sqlite3_stmt *stmt;
 	// Prepare statement of inserting row into Account table. 
-	sqlite3_prepare_v2(db, "INSERT INTO Account (Username,Password,Email,DateCreated) VALUES (?1,?2,?3,?4);", -1, &stmt, NULL);
+	sqlite3_prepare_v2(db, "INSERT INTO Account (Username,Password,Email,TimeCreated) VALUES (?1,?2,?3,?4);", -1, &stmt, NULL);
 		// Bind new account variables to statement placeholders.
 	sqlite3_bind_text(stmt, 1, accountName.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, accountPass.c_str(), -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 3, accountEmail.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 4, dateCreated.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 4, timeCreated.c_str(), -1, SQLITE_STATIC);
 
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
@@ -186,36 +185,26 @@ int Account::findDetailsByUsername() {
 	}
 
 	sqlite3_stmt *stmt;
-
-	char sqlString[] = "SELECT * FROM Account WHERE Username = '";
-	strcat(sqlString, accountName.c_str());
-	strcat(sqlString, "';");
-	std::cout << sqlString << std::endl;
-
-	sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
+	
+	sqlite3_prepare_v2(db, "SELECT * FROM Account WHERE UserName = ?;", -1, &stmt, NULL);
+	sqlite3_bind_text(stmt, 1, accountName.c_str(), sizeof(accountName.c_str()), 0);
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr, "ERROR preparing database for finding details: %s\n", sqlite3_errmsg(db));
-		std::cout << "Error preparing database." << std::endl;
 		sqlite3_finalize(stmt);
 		sqlite3_close(db);
 		return -1;
 	}
 
-	// Cast text returned by sqlite3_column_text to strings.
-	std::cout << sqlite3_column_text(stmt, 0) << std::endl;
-	std::string name(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
-	std::string pass(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
-	std::string email(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
-	std::string date(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
-
+	if (rc == SQLITE_ROW) {
+		details.name = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+		details.pass = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+		details.email = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
+		details.date = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)));
+	}
+	
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	
-	details.name = name;
-	details.pass = pass;
-	details.email = email;
-	details.date = date;
-
 	return 0;
 }

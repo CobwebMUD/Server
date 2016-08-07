@@ -27,7 +27,7 @@ class Account {
 	public:
 		Account(std::string userName, std::string pass, std::string email);
 		Account(std::string userName, std::string pass);
-		bool userExists;
+		bool exists();
 		bool loggedIn;
 		struct accountDetails {
 			std::string name;
@@ -36,12 +36,11 @@ class Account {
 			std::string date;
 		} details;
 	private:
-		bool exists();
 		char const* dbFile = "data/game.db";
 		std::string accountName;
 		std::string accountPass;
 		std::string accountEmail;
-		std::string dateCreated;
+		std::string timeCreated;
 		int storeAccount();
 		int findDetailsByUsername();
 		int createAccountTable();

@@ -89,9 +89,12 @@ void User::uListen()
 		loggedIn = account->loggedIn;
 		std::cout << loggedIn << std::endl;
 
-		// create a new example character
-		std::vector<std::string> keywords {"tiny", "young", "woman"};
-		character = new Character(userName, "Lisa", keywords, "the tiny, young woman", "This woman is rather fine looking, and she stands way\nbelow the average height of many humans.");
+		// test character
+		std::vector<std::string> keywords;
+		keywords.push_back("tall");
+		keywords.push_back("muscled");
+		keywords.push_back("man");
+		character = new Character(userName.c_str(), "Amos", keywords, "the tall, muscled man", "He is a tall and muscled man.");
 	}
 	else if (userInput == "1") 
 	{
@@ -119,16 +122,34 @@ void User::uListen()
 		std::string userPass = std::string(fromUser);
 		trimStr(userPass);
 
+		std::cout << userName << ", " << userPass << std::endl;
+
 		account = new Account(userName, userPass);
-		if (account->userExists) {
-			if (account->loggedIn) {
-				prompt = "You have logged in!\n";
-				write(clientID, prompt, strlen(prompt));
-				loggedIn = true;
-			} else {
-				prompt = "Failed to log in. Account does not exist.\n";
-				write(clientID, prompt, strlen(prompt));
+		if (account->loggedIn) {
+			prompt = "You have logged in!\n";
+			write(clientID, prompt, strlen(prompt));
+			loggedIn = true;
+
+			character = new Character(account->details.name.c_str());
+
+			// show list of existing characters if not empty
+			std::vector<Character::CharInd> accountChars = character->getAccountChars();
+			if (accountChars.empty()) {
+				prompt = "You have no characters.\n";
 			}
+			else {
+				prompt = "Choose a character:\n";
+				for (auto it = accountChars.begin(); it != accountChars.end(); ++it) {
+					std::ostringstream ss;
+					ss << "  (" << it->ind << ") " << it->name << "\n";
+					std::string output = ss.str();
+					prompt = output.c_str();
+					write(clientID, prompt, strlen(prompt));
+				}
+			}
+		} else {
+			prompt = "Failed to log in. Account does not exist.\n";
+			write(clientID, prompt, strlen(prompt));
 		}
 	}
 	if (loggedIn)
