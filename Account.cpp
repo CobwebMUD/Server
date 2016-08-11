@@ -65,7 +65,7 @@ Account::Account(std::string userName, std::string pass) : accountName(userName)
 		if (exists()) 
 		{
 			// Gather info from username into struct 'details'
-			if (findDetailsByUsername() == 0)
+			if (findDetailsByUsername(accountName) == 0)
 				loggedIn = (details.pass == accountPass);
 			else 
 				std::cout << "failed to get them juicy details" << std::endl;
@@ -147,24 +147,20 @@ bool Account::exists() {
 		return false;
 	}
 	sqlite3_stmt *stmt;
-	// Check if account name already exists.
-	char sqlString[] = "SELECT COUNT(*) FROM Account WHERE Username = '";
-	strcat(sqlString, accountName.c_str());
-	strcat(sqlString, "';");
-	rc = sqlite3_prepare_v2(db, sqlString, -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		fprintf(stderr, "ERROR preparing database for exists() function: %s\n", sqlite3_errmsg(db));
-		sqlite3_finalize(stmt);
-		sqlite3_close(db);
-		return false;
-	}
-	// Execute statement
+	sqlite3_prepare_v2(db, "SELECT COUNT(*) FROM Account WHERE Username = ?1;", -1, &stmt, NULL);
+	sqlite3_bind_text(stmt, 1, accountName.c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr, "ERROR executing statement: %s\n", sqlite3_errmsg(db));
 		sqlite3_finalize(stmt);
 		sqlite3_close(db);
 		return false;
+	}
+	else if (rc == SQLITE_DONE) {
+		std::cout << "No such users existing." << std::endl;
+		sqlite3_finalize(stmt);
+		sqlite3_close(db);
+		return 0;
 	}
 	int count = sqlite3_column_int(stmt, 0);
 	std::cout << "Number of users with same username existing: " << count << std::endl;
@@ -174,7 +170,7 @@ bool Account::exists() {
 }
 
 // Function that uses the account's username and returns account info.
-int Account::findDetailsByUsername() {
+int Account::findDetailsByUsername(std::string user) {
 	sqlite3 *db;
 	int rc = sqlite3_open(dbFile, &db);
 	if (rc != SQLITE_OK) 
@@ -185,9 +181,8 @@ int Account::findDetailsByUsername() {
 	}
 
 	sqlite3_stmt *stmt;
-	
-	sqlite3_prepare_v2(db, "SELECT * FROM Account WHERE UserName = ?;", -1, &stmt, NULL);
-	sqlite3_bind_text(stmt, 1, accountName.c_str(), sizeof(accountName.c_str()), 0);
+	sqlite3_prepare_v2(db, "SELECT * FROM Account WHERE Username = ?1;", -1, &stmt, NULL);
+	sqlite3_bind_text(stmt, 1, accountName.c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE && rc != SQLITE_ROW) {
 		fprintf(stderr, "ERROR preparing database for finding details: %s\n", sqlite3_errmsg(db));

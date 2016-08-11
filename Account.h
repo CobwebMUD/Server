@@ -42,6 +42,6 @@ class Account {
 		std::string accountEmail;
 		std::string timeCreated;
 		int storeAccount();
-		int findDetailsByUsername();
+		int findDetailsByUsername(std::string user);
 		int createAccountTable();
 };
