@@ -139,7 +139,7 @@ int Character::gatherDetailsByID() {
 	sqlite3_stmt *stmt;
 
 	// prepare statement
-	sqlite3_prepare_v2(db, "SELECT * FROM Character WHERE ID = '?';", -1, &stmt, NULL);
+	sqlite3_prepare_v2(db, "SELECT * FROM Character WHERE ID = ?;", -1, &stmt, NULL);
 	sqlite3_bind_int(stmt, 1, charID);
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
